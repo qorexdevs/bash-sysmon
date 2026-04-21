@@ -1,0 +1,7 @@
+# healthcheck.conf — one service per line
+# format: name url [timeout_seconds]
+
+google          https://www.google.com
+github          https://github.com
+cloudflare      https://1.1.1.1          3
+my-api          https://api.example.com  10
