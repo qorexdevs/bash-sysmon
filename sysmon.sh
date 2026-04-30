@@ -49,6 +49,10 @@ _alert() {
     fi
 }
 
+float_gt() {
+    awk -v a="$1" -v b="$2" 'BEGIN { exit !(a > b) }'
+}
+
 get_cpu() {
     awk '/^cpu /{
         idle=$5; total=$2+$3+$4+$5+$6+$7+$8
@@ -88,11 +92,11 @@ check_once() {
     read -r disk_usage disk_mount <<< "$(get_disk)"
     load=$(get_load)
 
-    if (( $(echo "$cpu > $CPU_THRESHOLD" | bc -l) )); then
+    if float_gt "$cpu" "$CPU_THRESHOLD"; then
         _alert "WARN" "High CPU: ${cpu}% (threshold: ${CPU_THRESHOLD}%) | load: $load"
     fi
 
-    if (( $(echo "$ram > $RAM_THRESHOLD" | bc -l) )); then
+    if float_gt "$ram" "$RAM_THRESHOLD"; then
         _alert "WARN" "High RAM: ${ram}% (threshold: ${RAM_THRESHOLD}%)"
     fi
 
@@ -115,13 +119,13 @@ cmd_status() {
     echo -e "${BOLD}Load avg:${NC}  $load"
 
     local cpu_color="$GREEN"
-    (( $(echo "$cpu > $CPU_THRESHOLD" | bc -l) )) && cpu_color="$RED" || \
-    (( $(echo "$cpu > 70" | bc -l) )) && cpu_color="$YELLOW"
+    float_gt "$cpu" "$CPU_THRESHOLD" && cpu_color="$RED" || \
+    float_gt "$cpu" 70 && cpu_color="$YELLOW"
     echo -e "${BOLD}CPU:${NC}       ${cpu_color}${cpu}%${NC} (alert: ${CPU_THRESHOLD}%)"
 
     local ram_color="$GREEN"
-    (( $(echo "$ram > $RAM_THRESHOLD" | bc -l) )) && ram_color="$RED" || \
-    (( $(echo "$ram > 75" | bc -l) )) && ram_color="$YELLOW"
+    float_gt "$ram" "$RAM_THRESHOLD" && ram_color="$RED" || \
+    float_gt "$ram" 75 && ram_color="$YELLOW"
     echo -e "${BOLD}RAM:${NC}       ${ram_color}${ram}%${NC} (alert: ${RAM_THRESHOLD}%)"
 
     local disk_usage disk_mount
